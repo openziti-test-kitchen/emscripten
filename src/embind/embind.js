@@ -1045,7 +1045,7 @@ var LibraryEmbind = {
       }
 
 #if ASYNCIFY
-      if (Asyncify.currData) {
+      if (Asyncify.currData.active()) {
         return Asyncify.whenDone().then(onDone);
       }
 #endif

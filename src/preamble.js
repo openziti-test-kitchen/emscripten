@@ -140,7 +140,7 @@ function ccall(ident, returnType, argTypes, args, opts) {
   runtimeKeepalivePush();
   var asyncMode = opts && opts.async;
   // Check if we started an async operation just now.
-  if (Asyncify.currData) {
+  if (Asyncify.currData.active()) {
     // If so, the WASM function ran asynchronous and unwound its stack.
     // We need to return a Promise that resolves the return value
     // once the stack is rewound and execution finishes.
