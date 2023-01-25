@@ -290,7 +290,7 @@ mergeInto(LibraryManager.library, {
           }
           // Track whether the return value was handled by any promise handlers.
           var handled = false;
-          if (!Asyncify.active()) {
+          if (!Asyncify.currData.active()) {
             // All asynchronous execution has finished.
             // `asyncWasmReturnValue` now contains the final
             // return value of the exported async WASM function.
