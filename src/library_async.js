@@ -36,21 +36,37 @@ mergeInto(LibraryManager.library, {
     StackSize: {{{ ASYNCIFY_STACK_SIZE }}},
     currData: {
       stac: new Array(),
-
-      pop: function(){
-        return this.stac.pop();
+      map: new Map(),
+      hashCode: function(arg) {
+        let str = JSON.stringify(arg);
+        var hash = 0,
+          i, chr;
+        if (str.length === 0) return hash;
+        for (i = 0; i < str.length; i++) {
+          chr = str.charCodeAt(i);
+          hash = ((hash << 5) - hash) + chr;
+          hash |= 0; // Convert to 32bit integer
+        }
+        return hash;
       },
-
-      peek: function(){
-        return this.stac[this.stac.length - 1];
+      enqueue: function(arg, item) {
+        let hash = this.hashCode(arg);
+        this.map.set(hash, item);
+        return;
       },
-
-      push: function(item){
-        this.stac.push(item);
+      dequeue: function(arg) {
+        let hash = this.hashCode(arg);
+        let item = this.map.get(hash);
+        this.map.delete(hash);
+        return item;
       },
-
-      active: function(){
-        return (this.stac.length > 0);
+      peek: function(arg) {
+        let hash = this.hashCode(arg);
+        let item = this.map.get(hash);
+        return item;
+      },
+      active: function() {
+        return (this.map.size > 0);
       },
     },
     // The return value passed to wakeUp() in
@@ -227,6 +243,11 @@ mergeInto(LibraryManager.library, {
       var func = Module['asm'][name];
       return func;
     },
+    getDataRewindFuncName: function(ptr) {
+      var id = HEAP32[ptr + 8 >> 2];
+      var name = Asyncify.callStackIdToName[id];
+      return name;
+    },
 
     doRewind: function(ptr) {
       var start = Asyncify.getDataRewindFunc(ptr);
@@ -239,7 +260,7 @@ mergeInto(LibraryManager.library, {
       return start();
     },
 
-    handleSleep: function(startAsync) {
+    handleSleep: function(arg, startAsync) {
 #if ASSERTIONS
       assert(Asyncify.state !== Asyncify.State.Disabled, 'Asyncify cannot be done during or after the runtime exits');
 #endif
@@ -283,7 +304,7 @@ mergeInto(LibraryManager.library, {
           }
           var asyncWasmReturnValue, isError = false;
           try {
-            asyncWasmReturnValue = Asyncify.doRewind(Asyncify.currData.peek());
+            asyncWasmReturnValue = Asyncify.doRewind(Asyncify.currData.peek(arg));
           } catch (err) {
             asyncWasmReturnValue = err;
             isError = true;
@@ -323,7 +344,7 @@ mergeInto(LibraryManager.library, {
           Asyncify.state = Asyncify.State.Unwinding;
           // TODO: reuse, don't alloc/free every sleep
           var data = Asyncify.allocateData();
-          Asyncify.currData.push(data);
+          Asyncify.currData.enqueue(arg, data);
 #if ASYNCIFY_DEBUG
           err('ASYNCIFY: start unwind ' + Asyncify.currData);
 #endif
@@ -339,7 +360,7 @@ mergeInto(LibraryManager.library, {
 #endif
         Asyncify.state = Asyncify.State.Normal;
         runAndAbortIfError(Module['_asyncify_stop_rewind']);
-        var data = Asyncify.currData.pop();
+        var data = Asyncify.currData.dequeue(arg);
         _free(data);
       // Call all sleep callbacks now that the sleep-resume is all done.
         Asyncify.sleepCallbacks.forEach(function(func) {
@@ -356,8 +377,8 @@ mergeInto(LibraryManager.library, {
     //
     // This is particularly useful for native JS `async` functions where the
     // returned value will "just work" and be passed back to C++.
-    handleAsync: function(startAsync) {
-      return Asyncify.handleSleep(function(wakeUp) {
+    handleAsync: function(arg, startAsync) {
+      return Asyncify.handleSleep(arg, function(wakeUp) {
         // TODO: add error handling as a second param when handleSleep implements it.
         startAsync().then(wakeUp);
       });
