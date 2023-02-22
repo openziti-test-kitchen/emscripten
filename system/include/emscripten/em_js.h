@@ -68,4 +68,7 @@
 #define EM_JS(ret, name, params, ...) _EM_JS(ret, name, name, params, #__VA_ARGS__)
 
 #define EM_ASYNC_JS(ret, name, params, ...) _EM_JS(ret, name, __asyncjs__##name, params,          \
-  "{ let arg = { " #params " }; return Asyncify.handleAsync(arg, async () => " #__VA_ARGS__ "); }")
+  "{ return Asyncify.handleAsync(arg, async () => " #__VA_ARGS__ "); }")
+
+#define EM_ASYNC_ZITI_READSOCKET_JS(ret, name, params, ...) _EM_JS(ret, name, __asyncjs__##name, params,          \
+  "{ let arg = { ziti_readsocket_ctr,fd,out_parm,outl_parm }; return Asyncify.handleAsync(arg, async () => " #__VA_ARGS__ "); }")
