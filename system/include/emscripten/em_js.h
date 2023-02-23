@@ -70,11 +70,9 @@
 #define EM_ASYNC_JS(ret, name, params, ...) _EM_JS(ret, name, __asyncjs__##name, params,          \
   "{ return Asyncify.handleAsync(arg, async () => " #__VA_ARGS__ "); }")
 
-// #define EM_ASYNC_ZITI_READSOCKET_JS(ret, name, params, ...) _EM_JS(ret, name, __asyncjs__##name, params,          \
-//   "{ let arg = { ziti_readsocket_ctr,fd,out_parm,outl_parm }; return Asyncify.handleAsync(arg, async () => " #__VA_ARGS__ "); }")
 
 
-#define _EM_ZITI_JS(ret, c_name, js_name, params, paramnames, code)                                \
+#define _EM_ZITI_JS(ret, c_name, js_name, params, code)                                            \
   _EM_JS_CPP_BEGIN                                                                                 \
   ret c_name params EM_IMPORT(js_name);                                                            \
   EMSCRIPTEN_KEEPALIVE                                                                             \
@@ -82,5 +80,5 @@
     #params "<::>" code;                                                                           \
   _EM_JS_CPP_END
 
-#define EM_ZITI_ASYNC_JS(ret, name, params, paramnames, ...) _EM_ZITI_JS(ret, name, __asyncjs__##name, params, paramnames,        \
-  "{ let arg = Object.assign({}, '"#paramnames"'.replace(/[()]/g,'')); return Asyncify.handleAsync(arg, async () => " #__VA_ARGS__ "); }")
+#define EM_ZITI_ASYNC_JS(ret, name, params, ...) _EM_ZITI_JS(ret, name, __asyncjs__##name, params,        \
+  "{ let arg = Object.assign({}, '"#params"'); return Asyncify.handleAsync(arg, async () => " #__VA_ARGS__ "); }")
