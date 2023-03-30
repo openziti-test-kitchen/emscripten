@@ -72,6 +72,7 @@ mergeInto(LibraryManager.library, {
         return item;
       },
       active: function() {
+        this.ensureMap();
         return (this.map.size > 0);
       },
     },
