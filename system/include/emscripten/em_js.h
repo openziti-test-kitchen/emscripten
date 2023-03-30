@@ -81,4 +81,4 @@
   _EM_JS_CPP_END
 
 #define EM_ZITI_ASYNC_JS(ret, name, params, ...) _EM_ZITI_JS(ret, name, __asyncjs__##name, params,        \
-  "{ let arg = Object.assign({}, '"#params"'); return Asyncify.handleAsync(arg, async () => " #__VA_ARGS__ "); }")
+  "{ let p = '"#params"'.replace(/int /g,'').replace(/char \\*/g,''); let arg = Object.assign({}, {p}); return Asyncify.handleAsync(arg, async () => " #__VA_ARGS__ "); }")

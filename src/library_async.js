@@ -35,8 +35,11 @@ mergeInto(LibraryManager.library, {
     state: 0,
     StackSize: {{{ ASYNCIFY_STACK_SIZE }}},
     currData: {
-      stac: new Array(),
-      map: new Map(),
+      ensureMap: function() {
+        if (undefined === this.map) {
+          this.map = new Map();
+        }
+      },
       hashCode: function(arg) {
         let str = JSON.stringify(arg);
         var hash = 0,
@@ -51,17 +54,20 @@ mergeInto(LibraryManager.library, {
       },
       enqueue: function(arg, item) {
         let hash = this.hashCode(arg);
+        this.ensureMap();
         this.map.set(hash, item);
         return;
       },
       dequeue: function(arg) {
         let hash = this.hashCode(arg);
+        this.ensureMap();
         let item = this.map.get(hash);
         this.map.delete(hash);
         return item;
       },
       peek: function(arg) {
         let hash = this.hashCode(arg);
+        this.ensureMap();
         let item = this.map.get(hash);
         return item;
       },
